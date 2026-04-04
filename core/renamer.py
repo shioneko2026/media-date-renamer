@@ -173,6 +173,11 @@ def build_rename_plan(creator_folder: str, creator: str, creator_jp: str,
             'old_name': fname,
             'new_name': candidate,
             'is_null': is_null,
+            # Stored so the rename window can rebuild new_name after a manual re-date
+            'subfolder_parts': subfolder_parts,
+            'original_stem': original_stem,
+            'ext': ext,
+            'target_dir': target_dir,
         })
 
     return plan

@@ -3,10 +3,13 @@ gui/rename_window.py — Main PyQt6 rename preview window.
 Replaces the tkinter PreviewWindow in the old rename_media.py.
 """
 
+import os
+
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel,
     QLineEdit, QTableWidget, QTableWidgetItem, QHeaderView,
-    QPushButton, QProgressBar, QMessageBox, QCheckBox, QAbstractItemView
+    QPushButton, QProgressBar, QMessageBox, QCheckBox, QAbstractItemView,
+    QDialog, QDialogButtonBox, QScrollArea
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QColor, QFont
@@ -154,14 +157,37 @@ class RenameWindow(QMainWindow):
 
         # ── Button bar ────────────────────────────────────────────────────────
         btn_row = QHBoxLayout()
+
         self._select_all_btn = QPushButton('Select All')
-        self._select_all_btn.setFixedWidth(100)
+        self._select_all_btn.setFixedWidth(90)
         self._select_all_btn.clicked.connect(self._select_all)
+
         self._deselect_all_btn = QPushButton('Deselect All')
-        self._deselect_all_btn.setFixedWidth(100)
+        self._deselect_all_btn.setFixedWidth(90)
         self._deselect_all_btn.clicked.connect(self._deselect_all)
+
+        self._deselect_null_btn = QPushButton('Deselect Null')
+        self._deselect_null_btn.setFixedWidth(100)
+        self._deselect_null_btn.setToolTip('Deselect files with no readable media creation date (shown in orange)')
+        self._deselect_null_btn.clicked.connect(self._deselect_null)
+
+        self._whats_null_btn = QPushButton("What's Null?")
+        self._whats_null_btn.setFixedWidth(100)
+        self._whats_null_btn.setToolTip('Learn what "null" dates mean and how dates are determined')
+        self._whats_null_btn.clicked.connect(self._show_null_explainer)
+
+        self._redate_btn = QPushButton('Manual Re-date')
+        self._redate_btn.setFixedWidth(110)
+        self._redate_btn.setToolTip('Manually assign a date to all selected files')
+        self._redate_btn.setEnabled(False)
+        self._redate_btn.clicked.connect(self._manual_redate)
+
         btn_row.addWidget(self._select_all_btn)
         btn_row.addWidget(self._deselect_all_btn)
+        btn_row.addWidget(self._deselect_null_btn)
+        btn_row.addSpacing(8)
+        btn_row.addWidget(self._whats_null_btn)
+        btn_row.addWidget(self._redate_btn)
         btn_row.addStretch()
 
         self._cancel_btn = QPushButton('Cancel')
@@ -206,6 +232,7 @@ class RenameWindow(QMainWindow):
         self._status_lbl.setText(f'Found {len(plan)} file(s) to rename.')
         self._populate_table()
         self._confirm_btn.setEnabled(True)
+        self._redate_btn.setEnabled(True)
 
     # ── Table population ──────────────────────────────────────────────────────
 
@@ -249,6 +276,156 @@ class RenameWindow(QMainWindow):
     def _deselect_all(self):
         for cb in getattr(self, '_checkboxes', []):
             cb.setChecked(False)
+
+    def _deselect_null(self):
+        for i, cb in enumerate(getattr(self, '_checkboxes', [])):
+            if self._plan[i]['is_null']:
+                cb.setChecked(False)
+
+    def _show_null_explainer(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("What's a Null Date?")
+        dlg.setMinimumWidth(540)
+        dlg.setMaximumWidth(580)
+
+        layout = QVBoxLayout(dlg)
+        layout.setContentsMargins(20, 16, 20, 16)
+        layout.setSpacing(12)
+
+        text = QLabel()
+        text.setWordWrap(True)
+        text.setFont(QFont('Segoe UI', 9))
+        text.setText(
+            "<b>How Media Date Renamer decides which date to use</b><br><br>"
+
+            "Every media file has two kinds of dates:<br><br>"
+
+            "<b>1. File system dates</b> — the Created and Modified timestamps "
+            "shown in Windows Explorer. These are <i>not</i> used by this tool. "
+            "They are unreliable because they change every time you copy, move, "
+            "download, re-compress, or re-upload a file. A video shot in 2019 "
+            "that you downloaded yesterday will show yesterday's date — "
+            "which tells you nothing about when it was actually made.<br><br>"
+
+            "<b>2. Media creation date (embedded metadata)</b> — a date written "
+            "into the file itself by the camera, recorder, or software that created it. "
+            "This date travels with the file no matter how many times it is copied "
+            "or moved. It is the closest reliable record of when the content was "
+            "actually produced, which is why this tool reads it instead of "
+            "the file system date.<br><br>"
+
+            "<b>Where exactly does it look?</b><br>"
+            "For <b>video files</b>, it reads the <i>encoded_date</i> or "
+            "<i>tagged_date</i> field from the file's internal media track, "
+            "using a library called MediaInfo.<br>"
+            "For <b>image files</b>, it reads the <i>DateTimeOriginal</i> "
+            "field from EXIF data (the same metadata your phone camera writes), "
+            "falling back to DateTimeDigitized or DateTime if the first is absent.<br><br>"
+
+            "<b>What does null mean?</b><br>"
+            "A file is marked <b style='color: #E65100;'>null</b> (shown in orange) "
+            "when no embedded media creation date could be found anywhere in the file. "
+            "This is common with files that were re-encoded, downloaded from certain "
+            "platforms, or created by software that does not write metadata dates.<br><br>"
+
+            "Null files will be renamed with the literal text <i>[null]</i> in place "
+            "of the date. You can:<br>"
+            "• Use <b>Deselect Null</b> to exclude them from this rename batch<br>"
+            "• Use <b>Manual Re-date</b> to assign a date to them yourself"
+        )
+        layout.addWidget(text)
+
+        tldr = QLabel(
+            "<b>TL;DR —</b> Orange files have no date we could read. "
+            "If you don't know or don't care, just leave them check-listed and proceed. "
+            "If you know when the content was made, you can run it once with Null deselected, "
+            "then use <b>Manual Re-date</b> on the orange ones afterward."
+        )
+        tldr.setWordWrap(True)
+        tldr.setFont(QFont('Segoe UI', 9))
+        tldr.setStyleSheet(
+            'background: #FFF8E1; border: 1px solid #FFE082; '
+            'border-radius: 4px; padding: 8px;'
+        )
+        layout.addWidget(tldr)
+
+        close_btn = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        close_btn.accepted.connect(dlg.accept)
+        layout.addWidget(close_btn)
+
+        dlg.exec()
+
+    def _manual_redate(self):
+        import re as _re
+
+        selected = [i for i, cb in enumerate(getattr(self, '_checkboxes', []))
+                    if cb.isChecked()]
+        if not selected:
+            QMessageBox.information(self, 'Nothing Selected',
+                                    'Select the files you want to re-date first.')
+            return
+
+        # Input dialog
+        dlg = QDialog(self)
+        dlg.setWindowTitle('Manual Re-date')
+        dlg.setFixedWidth(340)
+        layout = QVBoxLayout(dlg)
+        layout.setContentsMargins(16, 14, 16, 12)
+        layout.setSpacing(8)
+
+        layout.addWidget(QLabel(f'Assign a date to {len(selected)} selected file(s):'))
+        date_edit = QLineEdit()
+        date_edit.setPlaceholderText('YYYY-MM-DD')
+        date_edit.setFont(QFont('Consolas', 10))
+        layout.addWidget(date_edit)
+
+        hint = QLabel('Example: 2024-06-15')
+        hint.setFont(QFont('Segoe UI', 8))
+        hint.setStyleSheet('color: #888;')
+        layout.addWidget(hint)
+
+        btns = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        btns.accepted.connect(dlg.accept)
+        btns.rejected.connect(dlg.reject)
+        layout.addWidget(btns)
+
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        date_str = date_edit.text().strip()
+        if not _re.fullmatch(r'\d{4}-\d{2}-\d{2}', date_str):
+            QMessageBox.warning(self, 'Invalid Date',
+                                'Date must be in YYYY-MM-DD format.\nExample: 2024-06-15')
+            return
+
+        # Rebuild new_name for each selected row using the new date
+        from core.renamer import build_new_name
+        creator_jp = self._creator_jp_edit.text().strip()
+        post_title = self._post_title_edit.text().strip()
+        effective_category = self._category_edit.text().strip() or self._category
+        null_color = QColor('#FF8C00')
+
+        for i in selected:
+            item = self._plan[i]
+            new_name = build_new_name(
+                self._creator, creator_jp, date_str, post_title,
+                item['subfolder_parts'], item['original_stem'],
+                effective_category, item['ext'], self._preset
+            )
+            item['new_name'] = new_name
+            item['new_path'] = os.path.join(item['target_dir'], new_name)
+            item['is_null'] = False
+
+            # Update table row — clear orange, update new_name cell
+            old_cell = self._table.item(i, 1)
+            new_cell = self._table.item(i, 2)
+            if old_cell:
+                old_cell.setForeground(self._table.palette().text().color())
+            if new_cell:
+                new_cell.setText(new_name)
+                new_cell.setForeground(self._table.palette().text().color())
 
     def _on_confirm(self):
         # Rebuild plan with current optional field values + category override

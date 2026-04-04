@@ -79,6 +79,16 @@ Right-click **inside** a media folder (on empty space) or **on** a creator folde
 
 If no files need renaming, a "Nothing to Rename!" prompt is shown instead of failing silently.
 
+#### Rename window controls
+
+| Button | What it does |
+|---|---|
+| Deselect Null | Deselects files shown in orange (no readable media creation date) |
+| What's Null? | Explains how dates are determined and what null means |
+| Manual Re-date | Assigns a custom YYYY-MM-DD date to all selected files |
+
+Files with no embedded date are highlighted in orange. You can leave them checked and rename with `[null]` in the filename, deselect them to skip, or use Manual Re-date to assign a date yourself.
+
 ### Settings GUI
 
 Double-click `open_settings.bat` to open the settings panel. From here you can:
