@@ -67,7 +67,7 @@ class FixFolderDialog(QDialog):
         # Category / Source
         self._category_edit = QLineEdit()
         self._category_edit.setPlaceholderText('e.g. Fanbox, Fanbox, Iwara, Twitter …')
-        layout.addLayout(_row('Category:', self._category_edit))
+        layout.addLayout(_row('Source:', self._category_edit))
 
         # Status radio buttons
         status_row = QHBoxLayout()
@@ -80,8 +80,13 @@ class FixFolderDialog(QDialog):
         self._status_none = QRadioButton('None')
         self._status_none.setChecked(True)
         self._status_obtained = QRadioButton('[Obtained]')
+        self._status_obtained.setToolTip(
+            'Everything obtained up till latest date. Nothing missing save for deletion.')
         self._status_partial = QRadioButton('[Partial]')
+        self._status_partial.setToolTip(
+            'Partial Collection. Missing some stuff that isn\'t intentionally deleted.')
         self._status_uncertain = QRadioButton('[Uncertain]')
+        self._status_uncertain.setToolTip('Not sure')
         for rb in (self._status_none, self._status_obtained,
                    self._status_partial, self._status_uncertain):
             self._status_group.addButton(rb)
@@ -129,7 +134,7 @@ class FixFolderDialog(QDialog):
 
         creator = self._creator_edit.text().strip() or self._folder_name
         date = self._date_edit.text().strip() or 'YYYY-MM-DD'
-        category = self._category_edit.text().strip() or '?'
+        category = self._category_edit.text().strip() or 'Source'
         status = self._get_status()
 
         try:

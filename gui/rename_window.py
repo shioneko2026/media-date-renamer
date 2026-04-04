@@ -198,6 +198,7 @@ class RenameWindow(QMainWindow):
 
         if not plan:
             self._status_lbl.setText('No files need renaming.')
+            QMessageBox.information(self, 'Nothing to Rename', 'Nothing to Rename!')
             self.close()
             return
 

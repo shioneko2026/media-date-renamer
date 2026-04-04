@@ -20,11 +20,11 @@ The default **Universal Standard** preset follows the FanFan gallery-dl conventi
 
 ```
 # File
-Creator CreatorJP [YYYY-MM-DD] Post Title - OriginalFilename [Category].ext
+Creator CreatorJP [YYYY-MM-DD] Post Title - OriginalFilename [Source].ext
 
 # Folder
-Creator CreatorJP [YYYY-MM-DD] [Category]
-Creator CreatorJP [YYYY-MM-DD] [Category] [Status]
+Creator CreatorJP [YYYY-MM-DD] [Source]
+Creator CreatorJP [YYYY-MM-DD] [Source] [Status]
 ```
 
 Optional fields (`CreatorJP`, `Post Title`) collapse cleanly when blank — no double spaces or orphaned dashes.
@@ -77,6 +77,8 @@ Right-click **inside** a media folder (on empty space) or **on** a creator folde
 | Update Folder Date (Today) | Renames the folder using today's date |
 | Update Folder Date (Latest) | Scans media files, renames the folder using the most recent date found |
 
+If no files need renaming, a "Nothing to Rename!" prompt is shown instead of failing silently.
+
 ### Settings GUI
 
 Double-click `open_settings.bat` to open the settings panel. From here you can:
@@ -93,11 +95,19 @@ Double-click `open_settings.bat` to open the settings panel. From here you can:
 MediaRenamer expects creator folders in this format:
 
 ```
-Creator [YYYY-MM-DD] [Category]
-Creator [YYYY-MM-DD] [Category] [Status]
+Creator [YYYY-MM-DD] [Source]
+Creator [YYYY-MM-DD] [Source] [Status]
 ```
 
-If a folder doesn't match, the tool will prompt you to fill in the missing details.
+Status options:
+
+| Status | Meaning |
+|---|---|
+| Obtained | Everything obtained up to the latest date. Nothing missing except intentional deletions. |
+| Partial | Missing some content that wasn't intentionally deleted. |
+| Uncertain | Collection state unknown. |
+
+If a folder doesn't match the expected format, the tool will prompt you to fill in the missing details before proceeding.
 
 ---
 
