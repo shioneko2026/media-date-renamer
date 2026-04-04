@@ -10,6 +10,7 @@ A Windows tool for batch-renaming media files and creator folders using embedded
 
 - Renames media files using their embedded creation date (from metadata or EXIF)
 - Supports video files (via MediaInfo) and images (via EXIF — jpg, png, webp, heic, bmp, tiff)
+- Automatically strips creator name prefix from filenames to prevent double naming
 - Updates creator folder dates to today or to the latest date found in the folder's media
 - Integrates into the Windows right-click context menu (on folders and inside folders)
 - Comes with a GUI settings panel (`open_settings.bat`) for configuring presets, context menu entries, and supported file types
@@ -28,6 +29,38 @@ Creator CreatorJP [YYYY-MM-DD] [Source] [Status]
 ```
 
 Optional fields (`CreatorJP`, `Post Title`) collapse cleanly when blank — no double spaces or orphaned dashes.
+
+---
+
+## Screenshots
+
+**Settings panel — Rename tab**
+
+![Settings panel Rename tab](docs/screenshots/01_settings_rename_tab.jpg)
+
+**When a folder name doesn't match the expected format, a Fix Folder dialog appears. Date is auto-detected from the files inside when available.**
+
+<table>
+<tr>
+<td><img src="docs/screenshots/02_fix_folder_dialog.jpg" alt="Fix Folder dialog" width="500"/></td>
+<td><img src="docs/screenshots/03_fix_folder_autodate.jpg" alt="Fix Folder with auto-detected date" width="460"/></td>
+</tr>
+</table>
+
+**Rename preview window — review every planned rename before confirming**
+
+![Rename preview window](docs/screenshots/04_rename_preview.jpg)
+
+**Before and after — Explorer view of renamed files and folder**
+
+<table>
+<tr>
+<td><img src="docs/screenshots/05_renamed_files.jpg" alt="Renamed files in Explorer" width="800"/></td>
+</tr>
+<tr>
+<td><img src="docs/screenshots/06_renamed_folder.jpg" alt="Renamed folder result" width="460"/></td>
+</tr>
+</table>
 
 ---
 
