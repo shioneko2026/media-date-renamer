@@ -64,10 +64,24 @@ def build_new_name(creator: str, creator_jp: str, date_str: str,
     separator = preset.get('subfolder_separator', ' - ')
     include_sub = preset.get('include_subfolder_in_name', True)
 
+    # Strip creator name prefix from original_stem to prevent double naming.
+    # Matches "Creator- ", "Creator_ ", "Creator " etc. at the start (case-insensitive).
+    clean_stem = original_stem
+    if creator:
+        clean_stem = re.sub(
+            r'^' + re.escape(creator.strip()) + r'[\s\-_]+',
+            '',
+            original_stem,
+            flags=re.IGNORECASE
+        ).strip()
+        # Fall back to original if stripping left nothing
+        if not clean_stem:
+            clean_stem = original_stem
+
     if include_sub and subfolder_parts:
-        effective_name = separator.join(subfolder_parts) + separator + original_stem
+        effective_name = separator.join(subfolder_parts) + separator + clean_stem
     else:
-        effective_name = original_stem
+        effective_name = clean_stem
 
     file_template = preset.get(
         'file_template',
