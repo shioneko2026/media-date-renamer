@@ -171,7 +171,7 @@ def build_rename_plan(creator_folder: str, creator: str, creator_jp: str,
         # Resolve duplicates
         stem_part = desired_name[: -len(ext)] if ext else desired_name
         candidate = desired_name
-        counter = 2
+        counter = 1
         while (
             (os.path.exists(os.path.join(target_dir, candidate))
              and os.path.join(target_dir, candidate) != abs_path)
