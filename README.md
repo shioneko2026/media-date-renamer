@@ -1,44 +1,86 @@
 # Media Date Renamer
 
-A Windows tool for batch-renaming media files and creator folders using embedded metadata dates. Integrates into the Windows right-click context menu and includes a GUI settings panel with a preset system.
+**Rename your media files and creator folders the right way — automatically.**
 
-> **Work in progress.** Core renaming and folder update features are functional. Some features are still being developed.
-
----
-
-## What It Does
-
-- Renames media files using their embedded creation date (from metadata or EXIF)
-- Supports video files (via MediaInfo) and images (via EXIF — jpg, png, webp, heic, bmp, tiff)
-- Automatically strips creator name prefix from filenames to prevent double naming
-- Updates creator folder dates to today or to the latest date found in the folder's media
-- Integrates into the Windows right-click context menu (on folders and inside folders)
-- Comes with a GUI settings panel (`open_settings.bat`) for configuring presets, context menu entries, and supported file types
-
-### Naming Convention
-
-The default **Universal Standard** preset follows the FanFan gallery-dl convention:
-
-```
-# File
-Creator CreatorJP [YYYY-MM-DD] Post Title - OriginalFilename [Source].ext
-
-# Folder
-Creator CreatorJP [YYYY-MM-DD] [Source]
-Creator CreatorJP [YYYY-MM-DD] [Source] [Status]
-```
-
-Optional fields (`CreatorJP`, `Post Title`) collapse cleanly when blank — no double spaces or orphaned dashes.
+![Rename preview window showing files ready to rename](docs/screenshots/04_rename_preview.jpg)
+<!-- Replace with actual screenshot before publishing -->
 
 ---
 
-## Screenshots
+## The Problem
+
+If you download content from creators — videos, artwork, photos — you end up with filenames like `54 comiss.mp4` or `IMG_20240301_112233.jpg`. Nothing tells you who made it, when it was posted, or where it came from. Finding anything later is a mess.
+
+The right fix is a consistent naming format: `Creator [Date] Filename [Source].ext`. But doing this by hand takes forever. And if you use gallery-dl, the files already have some of this — but the naming is still inconsistent, and the folder dates go stale the moment you add new files.
+
+Media Date Renamer does all of it automatically. It reads the real creation date from inside the file — not the unreliable file system date — and renames everything in one click. Creator folders get updated too, so you can see at a glance when each creator was last active.
+
+---
+
+## What You Get
+
+- **Correct dates, not filesystem dates.** Reads the actual creation date embedded in the video or image file. Works for `.mp4`, `.mov`, `.mkv`, `.jpg`, `.png`, `.webp`, `.heic`, and more.
+- **Clean filenames in one click.** Files go from `54 comiss.mp4` to `Exga [2024-03-01] 54 comiss [F95].mp4` automatically.
+- **Creator prefix auto-removed.** If the filename already starts with the creator's name (common with gallery-dl), it gets stripped so you don't get `Exga [2024-03-01] Exga 54 comiss [F95].mp4`.
+- **Folder dates always current.** Update a folder's date to today or to the most recent file inside it. Just by looking at folder names, you can see which creators have new content and which don't.
+- **Preview before you commit.** A rename window shows you every planned change before anything is touched. Files with no readable date are highlighted in orange so you can decide what to do with them.
+- **Right-click, done.** Works directly from Windows Explorer. No extra windows to open.
+
+---
+
+## Install
+
+### 1. Install Python
+
+Download from [python.org](https://www.python.org/downloads/). During install, **tick "Add Python to PATH"** before clicking Install Now.
+
+Verify it worked: open Command Prompt and run `python --version`.
+
+### 2. Install dependencies
+
+Double-click `install_dependencies.bat`.
+
+This installs everything the tool needs: PyQt6, pymediainfo (includes the video reading library), Pillow, and pillow-heif.
+
+### 3. Register the right-click menu
+
+Right-click `install.bat` → **Run as administrator**.
+
+This adds the context menu entries to Windows. If you ever move the folder, run this again to update the paths.
+
+---
+
+## How to Use
+
+### Rename files in a creator folder
+
+Right-click **inside** the folder (on empty space) → **Rename Media Files**.
 
 **Settings panel — Rename tab**
 
 ![Settings panel Rename tab](docs/screenshots/01_settings_rename_tab.jpg)
 
-**When a folder name doesn't match the expected format, a Fix Folder dialog appears. Date is auto-detected from the files inside when available.**
+A preview window opens showing every planned rename. Files with no readable date are shown in orange.
+
+**Rename preview window — review every planned rename before confirming**
+
+![Rename preview window](docs/screenshots/04_rename_preview.jpg)
+
+Use the buttons at the top to control what gets renamed:
+
+| Button | What it does |
+|---|---|
+| Deselect Null | Unchecks all orange files (no readable date) |
+| What's Null? | Explains how dates are determined |
+| Manual Re-date | Lets you type in a date for all selected files |
+
+Click **Confirm** when ready. Nothing is renamed until you confirm.
+
+### Update a folder's date
+
+Right-click **on** a creator folder → choose one of the Update Folder Date options.
+
+If the folder name doesn't match the expected format, a dialog appears to fill in the missing details. When available, the date is detected automatically from the files inside.
 
 <table>
 <tr>
@@ -47,11 +89,7 @@ Optional fields (`CreatorJP`, `Post Title`) collapse cleanly when blank — no d
 </tr>
 </table>
 
-**Rename preview window — review every planned rename before confirming**
-
-![Rename preview window](docs/screenshots/04_rename_preview.jpg)
-
-**Before and after — Explorer view of renamed files and folder**
+### Before and after
 
 <table>
 <tr>
@@ -62,87 +100,33 @@ Optional fields (`CreatorJP`, `Post Title`) collapse cleanly when blank — no d
 </tr>
 </table>
 
----
-
-## Requirements
-
-- Windows 10/11
-- Python 3.10+
-- MediaInfo (for video metadata)
-
----
-
-## Setup
-
-### 1. Install Python
-
-Download from [python.org](https://www.python.org/downloads/). During install, **check "Add Python to PATH"**.
-
-### 2. Install MediaInfo
-
-Download the GUI version from [mediaarea.net](https://mediaarea.net/en/MediaInfo/Download/Windows). pymediainfo requires the underlying MediaInfo DLL that comes with this installer.
-
-### 3. Install Python dependencies
-
-Double-click `install_dependencies.bat`, or run:
-
-```
-pip install -r requirements.txt
-```
-
-### 4. Register the right-click menu
-
-Right-click `install.bat` → **Run as administrator**.
-
-This registers the context menu entries in the Windows registry. If you ever move the folder, re-run this.
-
----
-
-## Usage
-
-### Context menu (right-click)
-
-Right-click **inside** a media folder (on empty space) or **on** a creator folder:
-
-| Option | What it does |
-|---|---|
-| Rename Media Files | Scans the folder, shows a rename preview, lets you confirm |
-| Update Folder Date (Today) | Renames the folder using today's date |
-| Update Folder Date (Latest) | Scans media files, renames the folder using the most recent date found |
-
-If no files need renaming, a "Nothing to Rename!" prompt is shown instead of failing silently.
-
-#### Rename window controls
-
-| Button | What it does |
-|---|---|
-| Deselect Null | Deselects files shown in orange (no readable media creation date) |
-| What's Null? | Explains how dates are determined and what null means |
-| Manual Re-date | Assigns a custom YYYY-MM-DD date to all selected files |
-
-Files with no embedded date are highlighted in orange. You can leave them checked and rename with `[null]` in the filename, deselect them to skip, or use Manual Re-date to assign a date yourself.
-
-### Settings GUI
+### Settings
 
 Double-click `open_settings.bat` to open the settings panel. From here you can:
 
-- Create, duplicate, and switch between naming presets
+- Create and switch between naming presets
 - Configure which file types are included
 - Customize context menu labels and order
-- Browse to a folder and run any operation directly (Rename tab)
+- Run any operation directly from a folder browser
 
 ---
 
-## Folder Name Format
+## Naming Format
 
-MediaRenamer expects creator folders in this format:
+The default **Universal Standard** preset:
 
 ```
-Creator [YYYY-MM-DD] [Source]
-Creator [YYYY-MM-DD] [Source] [Status]
+# File
+Creator CreatorJP [YYYY-MM-DD] Post Title - OriginalFilename [Source].ext
+
+# Folder
+Creator CreatorJP [YYYY-MM-DD] [Source]
+Creator CreatorJP [YYYY-MM-DD] [Source] [Status]
 ```
 
-Status options:
+Optional fields (`CreatorJP`, `Post Title`) collapse cleanly when blank — no double spaces or stray dashes.
+
+Folder status options:
 
 | Status | Meaning |
 |---|---|
@@ -150,15 +134,15 @@ Status options:
 | Partial | Missing some content that wasn't intentionally deleted. |
 | Uncertain | Collection state unknown. |
 
-If a folder doesn't match the expected format, the tool will prompt you to fill in the missing details before proceeding.
-
 ---
 
-## Uninstalling
+## Known Limitations
 
-Right-click `uninstall.bat` → **Run as administrator**.
-
-Removes only the registry entries. Python, MediaInfo, and your files are untouched.
+| Limitation | Details |
+|---|---|
+| Windows only | Registry integration, UAC elevation, Windows paths |
+| HEIC support optional | Requires `pillow-heif`. If install fails, HEIC files are skipped but everything else works. |
+| No embedded date = null | Files with no metadata date show as `[null]`. Use Manual Re-date to assign one. |
 
 ---
 
@@ -168,6 +152,27 @@ Removes only the registry entries. Python, MediaInfo, and your files are untouch
 
 **"Python is not recognized"** — Reinstall Python and tick "Add Python to PATH". Restart any open terminals.
 
-**All dates show as null** — The file has no embedded date. Check if the filename contains a date; otherwise it will stay as-is until you set one manually.
+**All dates show as null** — The file has no embedded date. Check if the filename contains a date; otherwise use Manual Re-date.
 
-**"Failed to rename folder"** — A file inside the folder is open in another program. Close it and retry.
+**"Failed to rename folder"** — A file inside is open in another program. Close it and retry.
+
+---
+
+## Uninstall
+
+Right-click `uninstall.bat` → **Run as administrator**.
+
+Removes only the registry entries. Python and your files are untouched.
+
+---
+
+## TL;DR for Monke
+
+- Downloads give you messy filenames with no useful info
+- This tool renames them using the real date inside the file
+- Right-click inside a folder → Rename Media Files → preview → confirm
+- Orange files have no readable date — skip them, or type in a date manually
+- Right-click on a folder → update its date to today or to the newest file inside
+- Settings panel for presets, file types, context menu order
+- Run `install_dependencies.bat` → `install.bat` (as admin) → done
+- No separate video library to install — it's all included
